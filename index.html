@@ -187,7 +187,12 @@ function pic(name, cls) {
 }
 function itemOf(name) { return S.items.find((i) => i.name === name); }
 function unitOf(name) { const it = itemOf(name); return it ? it.unit : 'ชิ้น'; }
-function stepOf(name) { const it = itemOf(name); return it && it.step ? Number(it.step) : (unitOf(name) === 'ปอนด์' ? 0.25 : 1); }
+function stepOf(name) { if (unitOf(name) === 'ปอนด์') return 0.5; const it = itemOf(name); return it && it.step ? Number(it.step) : 1; }
+/** ขนมที่ขายเป็นปอนด์: ของถึง = ทั้งก้อน (1 ปอนด์), หน้าอื่น = ทีละ ½ ปอนด์ (1 ออเดอร์ = 2 ชิ้น) */
+function stepFor(page, name) {
+  if (unitOf(name) === 'ปอนด์') return page === 'receive' ? 1 : 0.5;
+  return stepOf(name);
+}
 function q4(v) { return Math.round(Number(v) * 4) / 4; }
 function fq(v) {
   const n = Number(v);
@@ -326,7 +331,7 @@ function renderWaste() {
     html = '<div class="card"><div class="sel"><div class="who-item">' + pic(w.item, 'thumb lg') + '<div><div class="hint">ขนม</div><b>' + esc(w.item) + '</b></div></div><button class="link" id="chg">เปลี่ยน</button></div><div id="dup"></div></div>' +
       '<div class="card"><div class="step"><span class="n">2</span>เสียกี่' + esc(unit) + '</div>' +
       '<div class="big-step"><button data-step="-1" aria-label="ลด">−</button><input id="qty" inputmode="' + (stepOf(w.item) < 1 ? 'decimal' : 'numeric') + '" value="' + fq(w.qty) + '" aria-label="จำนวน">' +
-      '<button data-step="1" aria-label="เพิ่ม">+</button></div>' + (unit === 'ปอนด์' ? '<div class="hint" style="text-align:center;margin-top:6px">1 ชิ้น = ¼ ปอนด์ · กด + / − ทีละ ¼</div>' : stepOf(w.item) === 0.5 ? '<div class="hint" style="text-align:center;margin-top:6px">1 ออเดอร์ = ½ ' + esc(unit) + ' · กด + / − ทีละ ½</div>' : '') + '</div>' +
+      '<button data-step="1" aria-label="เพิ่ม">+</button></div>' + (unit === 'ปอนด์' ? '<div class="hint" style="text-align:center;margin-top:6px">1 ออเดอร์ (2 ชิ้น) = ½ ปอนด์ · กด + / − ทีละ ½</div>' : stepOf(w.item) === 0.5 ? '<div class="hint" style="text-align:center;margin-top:6px">1 ออเดอร์ = ½ ' + esc(unit) + ' · กด + / − ทีละ ½</div>' : '') + '</div>' +
       '<div class="card"><div class="step"><span class="n">3</span>เพราะอะไร</div><div class="chips">' +
       REASONS.map((r) => '<button class="chip ' + (w.reason === r ? 'on' : '') + '" data-reason="' + esc(r) + '">' + esc(r) + '</button>').join('') + '</div>' +
       (w.showNote || w.note ? '<textarea id="note" placeholder="เช่น อุ่นนานเกิน">' + esc(w.note || '') + '</textarea>' : '<button class="link" id="addnote">+ เพิ่มหมายเหตุ</button>') + '</div>' +
@@ -392,24 +397,25 @@ function renderQtyPage(page) {
     '<div class="card"><div class="step" style="margin-bottom:8px">' + (page === 'receive' ? 'ของถึงวันไหน' : 'ขายวันไหน') + '</div>' + datePicker(dateKey, dateVal) + '</div>' +
     '<div class="card">' + searchBox(page, 'ค้นหาขนม') + '</div>' +
     groups(list).map((g) => '<div class="cat">' + esc(g.cat) + '</div><div class="card">' +
-      g.items.map((i) => '<div class="row' + (m[i.name] ? ' on' : '') + '" data-row="' + esc(i.name) + '">' + pic(i.name, 'thumb') + '<div class="nm">' + esc(i.name) + '<div class="meta">' + esc(i.unit) + '</div></div>' +
+      g.items.map((i) => '<div class="row' + (m[i.name] ? ' on' : '') + '" data-row="' + esc(i.name) + '">' + pic(i.name, 'thumb') + '<div class="nm">' + esc(i.name) + '<div class="meta">' + esc(i.unit) + (i.unit === 'ปอนด์' ? (page === 'receive' ? ' (ทั้งก้อน)' : ' · 1 ออเดอร์ = ½') : '') + '</div></div>' +
         '<div class="mini"><button data-dec="' + esc(i.name) + '" aria-label="ลด">−</button>' +
-        '<input class="num" data-qty="' + esc(i.name) + '" inputmode="' + (stepOf(i.name) < 1 ? 'decimal' : 'numeric') + '" value="' + (m[i.name] ? fq(m[i.name]) : '') + '" placeholder="0" aria-label="จำนวน ' + esc(i.name) + '">' +
+        '<input class="num" data-qty="' + esc(i.name) + '" inputmode="' + (stepFor(page, i.name) < 1 ? 'decimal' : 'numeric') + '" value="' + (m[i.name] ? fq(m[i.name]) : '') + '" placeholder="0" aria-label="จำนวน ' + esc(i.name) + '">' +
         '<button data-inc="' + esc(i.name) + '" aria-label="เพิ่ม">+</button></div></div>').join('') + '</div>').join('') +
     (list.length ? '' : '<div class="empty">ไม่เจอ ลองพิมพ์คำอื่น</div>');
   bindSearch(page, () => renderQtyPage(page));
   bindDate(dateKey, (v) => { if (page === 'receive') S.receiveDate = v; else S.offappDate = v; }, () => renderQtyPage(page));
   document.querySelectorAll('[data-ch]').forEach((b) => b.onclick = () => { S.channel = b.dataset.ch; document.querySelectorAll('[data-ch]').forEach((x) => x.classList.toggle('on', x === b)); qtyBar(page); });
   const set = (name, v, typing) => {
-    v = Math.max(0, q4(v));
+    const st = stepFor(page, name);
+    v = Math.max(0, Math.round(v / st) * st);
     if (v > 0) m[name] = v; else delete m[name];
     const el = sel('data-qty', name);
     if (el && !typing) el.value = v > 0 ? fq(v) : '';
     sel('data-row', name).classList.toggle('on', v > 0);
     qtyBar(page);
   };
-  document.querySelectorAll('[data-inc]').forEach((b) => b.onclick = () => set(b.dataset.inc, (m[b.dataset.inc] || 0) + stepOf(b.dataset.inc)));
-  document.querySelectorAll('[data-dec]').forEach((b) => b.onclick = () => set(b.dataset.dec, (m[b.dataset.dec] || 0) - stepOf(b.dataset.dec)));
+  document.querySelectorAll('[data-inc]').forEach((b) => b.onclick = () => set(b.dataset.inc, (m[b.dataset.inc] || 0) + stepFor(page, b.dataset.inc)));
+  document.querySelectorAll('[data-dec]').forEach((b) => b.onclick = () => set(b.dataset.dec, (m[b.dataset.dec] || 0) - stepFor(page, b.dataset.dec)));
   document.querySelectorAll('[data-qty]').forEach((el) => { el.oninput = () => set(el.dataset.qty, parseFloat(el.value) || 0, true); el.onfocus = () => el.select(); });
   qtyBar(page);
 }
@@ -435,7 +441,9 @@ function qtyBar(page) {
 
 /* ---------- นับสต็อก ---------- */
 function sysOf(i) {
-  return !i || i.counted === '' || i.counted == null ? null : Math.max(0, q4(Number(i.left) || 0));
+  if (!i || i.counted === '' || i.counted == null) return null;
+  const st = stepOf(i.name);
+  return Math.max(0, Math.round((Number(i.left) || 0) / st) * st);
 }
 function renderCount() {
   const c = S.count;
@@ -453,7 +461,7 @@ function renderCount() {
   bindSearch('count', renderCount);
   document.querySelectorAll('[data-f]').forEach((b) => b.onclick = () => { S.countFilter = b.dataset.f; renderCount(); });
   document.querySelectorAll('[data-same]').forEach((b) => b.onclick = () => setCount(b.dataset.same, Number(b.dataset.sys)));
-  document.querySelectorAll('[data-cnt]').forEach((el) => { el.oninput = () => { const t = el.value.trim(); setCount(el.dataset.cnt, t === '' ? null : Math.max(0, q4(parseFloat(t) || 0)), true); }; el.onfocus = () => el.select(); });
+  document.querySelectorAll('[data-cnt]').forEach((el) => { el.oninput = () => { const t = el.value.trim(), st = stepOf(el.dataset.cnt); setCount(el.dataset.cnt, t === '' ? null : Math.max(0, Math.round((parseFloat(t) || 0) / st) * st), true); }; el.onfocus = () => el.select(); });
   countBar();
 }
 function countRow(i) {
