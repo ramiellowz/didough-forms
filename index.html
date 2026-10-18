@@ -187,7 +187,7 @@ function pic(name, cls) {
 }
 function itemOf(name) { return S.items.find((i) => i.name === name); }
 function unitOf(name) { const it = itemOf(name); return it ? it.unit : 'ชิ้น'; }
-function stepOf(name) { return unitOf(name) === 'ปอนด์' ? 0.25 : 1; }
+function stepOf(name) { const it = itemOf(name); return it && it.step ? Number(it.step) : (unitOf(name) === 'ปอนด์' ? 0.25 : 1); }
 function q4(v) { return Math.round(Number(v) * 4) / 4; }
 function fq(v) {
   const n = Number(v);
@@ -326,7 +326,7 @@ function renderWaste() {
     html = '<div class="card"><div class="sel"><div class="who-item">' + pic(w.item, 'thumb lg') + '<div><div class="hint">ขนม</div><b>' + esc(w.item) + '</b></div></div><button class="link" id="chg">เปลี่ยน</button></div><div id="dup"></div></div>' +
       '<div class="card"><div class="step"><span class="n">2</span>เสียกี่' + esc(unit) + '</div>' +
       '<div class="big-step"><button data-step="-1" aria-label="ลด">−</button><input id="qty" inputmode="' + (stepOf(w.item) < 1 ? 'decimal' : 'numeric') + '" value="' + fq(w.qty) + '" aria-label="จำนวน">' +
-      '<button data-step="1" aria-label="เพิ่ม">+</button></div>' + (unit === 'ปอนด์' ? '<div class="hint" style="text-align:center;margin-top:6px">1 ชิ้น = ¼ ปอนด์ · กด + / − ทีละ ¼</div>' : '') + '</div>' +
+      '<button data-step="1" aria-label="เพิ่ม">+</button></div>' + (unit === 'ปอนด์' ? '<div class="hint" style="text-align:center;margin-top:6px">1 ชิ้น = ¼ ปอนด์ · กด + / − ทีละ ¼</div>' : stepOf(w.item) === 0.5 ? '<div class="hint" style="text-align:center;margin-top:6px">1 ออเดอร์ = ½ ' + esc(unit) + ' · กด + / − ทีละ ½</div>' : '') + '</div>' +
       '<div class="card"><div class="step"><span class="n">3</span>เพราะอะไร</div><div class="chips">' +
       REASONS.map((r) => '<button class="chip ' + (w.reason === r ? 'on' : '') + '" data-reason="' + esc(r) + '">' + esc(r) + '</button>').join('') + '</div>' +
       (w.showNote || w.note ? '<textarea id="note" placeholder="เช่น อุ่นนานเกิน">' + esc(w.note || '') + '</textarea>' : '<button class="link" id="addnote">+ เพิ่มหมายเหตุ</button>') + '</div>' +
@@ -394,7 +394,7 @@ function renderQtyPage(page) {
     groups(list).map((g) => '<div class="cat">' + esc(g.cat) + '</div><div class="card">' +
       g.items.map((i) => '<div class="row' + (m[i.name] ? ' on' : '') + '" data-row="' + esc(i.name) + '">' + pic(i.name, 'thumb') + '<div class="nm">' + esc(i.name) + '<div class="meta">' + esc(i.unit) + '</div></div>' +
         '<div class="mini"><button data-dec="' + esc(i.name) + '" aria-label="ลด">−</button>' +
-        '<input class="num" data-qty="' + esc(i.name) + '" inputmode="' + (i.unit === 'ปอนด์' ? 'decimal' : 'numeric') + '" value="' + (m[i.name] ? fq(m[i.name]) : '') + '" placeholder="0" aria-label="จำนวน ' + esc(i.name) + '">' +
+        '<input class="num" data-qty="' + esc(i.name) + '" inputmode="' + (stepOf(i.name) < 1 ? 'decimal' : 'numeric') + '" value="' + (m[i.name] ? fq(m[i.name]) : '') + '" placeholder="0" aria-label="จำนวน ' + esc(i.name) + '">' +
         '<button data-inc="' + esc(i.name) + '" aria-label="เพิ่ม">+</button></div></div>').join('') + '</div>').join('') +
     (list.length ? '' : '<div class="empty">ไม่เจอ ลองพิมพ์คำอื่น</div>');
   bindSearch(page, () => renderQtyPage(page));
@@ -463,7 +463,7 @@ function countRow(i) {
     '<div class="meta">' + (sys == null ? 'ยังไม่เคยนับ' : 'ระบบ ' + fq(sys) + ' ' + esc(i.unit)) + '</div>' +
     '<div class="diff" data-diff="' + esc(i.name) + '">' + (diff ? 'ต่างจากระบบ ' + (diff > 0 ? '+' : '−') + fq(Math.abs(diff)) : '') + '</div></div>' +
     (sys == null ? '' : '<button class="same" data-same="' + esc(i.name) + '" data-sys="' + sys + '">= ระบบ</button>') +
-    '<input class="num" data-cnt="' + esc(i.name) + '" inputmode="' + (i.unit === 'ปอนด์' ? 'decimal' : 'numeric') + '" value="' + (v != null ? fq(v) : '') + '" placeholder="-" aria-label="จำนวนที่นับ ' + esc(i.name) + '"></div>';
+    '<input class="num" data-cnt="' + esc(i.name) + '" inputmode="' + (stepOf(i.name) < 1 ? 'decimal' : 'numeric') + '" value="' + (v != null ? fq(v) : '') + '" placeholder="-" aria-label="จำนวนที่นับ ' + esc(i.name) + '"></div>';
 }
 function setCount(name, v, typing) {
   const c = S.count;
