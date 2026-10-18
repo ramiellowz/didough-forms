@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 2500px; height: 843px; overflow: hidden; background: #FBF6F0; }
+  .grid { display: grid; grid-template-columns: repeat(4, 625px); height: 843px; }
+  .cell { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 46px; border-right: 4px solid #EADFD3; }
+  .cell:last-child { border-right: 0; }
+  .icon { width: 250px; height: 250px; border-radius: 64px; display: grid; place-items: center; }
+  .icon svg { width: 150px; height: 150px; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .a .icon { background: #FBE4DA; } .a svg { stroke: #B4532A; }
+  .b .icon { background: #FCEFD9; } .b svg { stroke: #A8650E; }
+  .c .icon { background: #E3F4EA; } .c svg { stroke: #2F7F52; }
+  .d .icon { background: #E6EEF8; } .d svg { stroke: #3B6597; }
+  .label { font: 700 96px 'Sukhumvit Set', 'Thonburi', sans-serif; color: #3B2A1E; }
+</style>
+</head>
+<body>
+<div class="grid">
+  <div class="cell a"><div class="icon"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></div><div class="label">แจ้งของเสีย</div></div>
+  <div class="cell b"><div class="icon"><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg></div><div class="label">ของถึงแล้ว</div></div>
+  <div class="cell c"><div class="icon"><svg viewBox="0 0 24 24"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2"/><path d="M8.5 13.5l2.5 2.5 4.5-5"/></svg></div><div class="label">นับสต็อก</div></div>
+  <div class="cell d"><div class="icon"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div><div class="label">ดูสต็อก</div></div>
+</div>
+</body>
+</html>

@@ -1,3 +1,515 @@
 <!doctype html>
-<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Didough Stock</title></head>
-<body style="font-family:system-ui;padding:24px">กำลังเตรียมฟอร์ม…</body></html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Didough Stock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FBF6F0; --card: #FFFFFF; --ink: #3B2A1E; --muted: #85705E; --line: #EADFD3;
+    --accent: #C8692D; --accent-soft: #FBEBDF; --ok: #2F8F5B; --ok-soft: #E5F4EB;
+    --red: #C73E3E; --red-soft: #FBE6E6; --orange: #B86E0E; --orange-soft: #FCF0DC;
+    --green: #2F8F5B; --green-soft: #E5F4EB; --grey-soft: #F1EEEB;
+    --font: 'IBM Plex Sans Thai', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font: 16px/1.5 var(--font); padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
+  button, input, textarea { font-family: var(--font); color: var(--ink); }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 12px 16px 10px; border-bottom: 1px solid var(--line); }
+  .hd { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 21px; margin: 0; font-weight: 700; }
+  .who { font-size: 13px; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+  .lead { color: var(--muted); font-size: 14px; max-width: 640px; margin: 2px auto 0; }
+  main { padding: 12px 16px; max-width: 640px; margin: 0 auto; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+  .step { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 10px; }
+  .step .n { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 13px; display: grid; place-items: center; flex-shrink: 0; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .cat { font-weight: 600; color: var(--muted); font-size: 13px; margin: 14px 2px 6px; }
+  .search { width: 100%; height: 46px; border: 1px solid var(--line); border-radius: 12px; padding: 0 14px; font-size: 16px; background: #fff; }
+  .search:focus, .num:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+  .pick { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pick button { min-height: 44px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--line); background: #fff; font-size: 15px; text-align: left; }
+  .pick button:active { background: var(--accent-soft); }
+  .sel { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .sel b { font-size: 18px; }
+  .link { border: 0; background: none; color: var(--accent); font-weight: 600; font-size: 15px; padding: 10px 4px; }
+  .big-step { display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .big-step button { width: 56px; height: 56px; border-radius: 16px; border: 1px solid var(--line); background: #fff; font-size: 26px; line-height: 1; }
+  .big-step input { width: 96px; height: 56px; text-align: center; font-size: 26px; font-weight: 700; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+  .unit { text-align: center; color: var(--muted); font-size: 14px; margin-top: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { min-height: 44px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font-size: 15px; }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  textarea { width: 100%; min-height: 64px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 16px; resize: vertical; margin-top: 8px; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 10px 8px; margin: 0 -8px; border-radius: 12px; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row.on { background: var(--accent-soft); border-bottom-color: transparent; }
+  .row.okrow { background: var(--ok-soft); border-bottom-color: transparent; }
+  .row .nm { flex: 1; min-width: 0; font-size: 15px; }
+  .row .meta { color: var(--muted); font-size: 13px; }
+  .row .diff { color: var(--orange); font-size: 13px; font-weight: 600; }
+  .mini { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .mini button { width: 40px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 20px; line-height: 1; }
+  .num { width: 64px; height: 44px; text-align: center; font-size: 18px; font-weight: 600; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  .same { height: 44px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 13px; font-weight: 600; color: var(--muted); flex-shrink: 0; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--grey-soft); border-radius: 12px; padding: 4px; gap: 4px; margin-top: 10px; }
+  .seg button { height: 38px; border: 0; border-radius: 9px; background: none; font-size: 14px; font-weight: 600; color: var(--muted); }
+  .seg button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(59,42,30,.12); }
+  .progress { height: 8px; background: var(--grey-soft); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+  .progress i { display: block; height: 100%; background: var(--ok); border-radius: 99px; transition: width .2s; }
+  .bar { position: fixed; left: 0; right: 0; bottom: calc(62px + env(safe-area-inset-bottom)); padding: 12px 16px 10px; background: linear-gradient(rgba(251,246,240,0), var(--bg) 30%); z-index: 6; }
+  .bar .inner { max-width: 640px; margin: 0 auto; }
+  .btn { display: block; width: 100%; min-height: 52px; border: 0; border-radius: 14px; background: var(--accent); color: #fff; font-size: 17px; font-weight: 600; padding: 8px 14px; line-height: 1.35; }
+  .btn:disabled { background: #E3D3C4; color: #fff; }
+  .btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  nav.tabs { position: fixed; bottom: 0; left: 0; right: 0; z-index: 7; display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+  nav.tabs button { height: 62px; border: 0; background: none; font-size: 12px; font-weight: 500; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+  nav.tabs svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  nav.tabs button.on { color: var(--accent); font-weight: 600; }
+  .done { text-align: center; padding: 28px 16px; }
+  .tick { width: 68px; height: 68px; border-radius: 50%; background: var(--ok-soft); color: var(--ok); display: grid; place-items: center; margin: 0 auto 12px; }
+  .tick svg { width: 36px; height: 36px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .pills { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .pill { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; background: #fff; border: 1px solid var(--line); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dot.red { background: var(--red); } .dot.orange { background: #E39A2D; } .dot.green { background: var(--green); } .dot.grey { background: #B9B2AB; }
+  .lvl { border-radius: 16px; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--line); background: #fff; }
+  .lvl h2 { font-size: 16px; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+  .lvl.red { background: var(--red-soft); border-color: #F2CDCD; }
+  .lvl.orange { background: var(--orange-soft); border-color: #F1DDB8; }
+  .lvl.green { background: var(--green-soft); border-color: #C9E7D5; }
+  .lvl.grey { background: var(--grey-soft); }
+  .lvl .row { border-bottom-color: rgba(59,42,30,.08); }
+  .order { white-space: pre-wrap; font-size: 15px; line-height: 1.7; background: #fff; border: 1px dashed var(--line); border-radius: 12px; padding: 10px 12px; margin: 8px 0 10px; }
+  .toast { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 12px; z-index: 30; font-size: 15px; max-width: 90vw; }
+  .center { text-align: center; padding: 48px 16px; color: var(--muted); }
+  .err { color: var(--red); }
+  .sheet-bg { position: fixed; inset: 0; background: rgba(40,28,20,.45); z-index: 20; display: flex; align-items: flex-end; }
+  .sheet { background: var(--bg); width: 100%; max-height: 82vh; overflow: auto; border-radius: 20px 20px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .sheet h3 { margin: 0 0 4px; font-size: 18px; }
+  .sheet .list { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 4px 12px; margin: 12px 0; }
+  .sheet .li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .sheet .li:last-child { border-bottom: 0; }
+  .sheet .actions { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+  .empty { text-align: center; color: var(--muted); padding: 16px 0 4px; }
+  .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .tile { border: 1px solid var(--line); border-radius: 14px; background: #fff; padding: 0; overflow: hidden; text-align: left; display: flex; flex-direction: column; }
+  .tile:active { border-color: var(--accent); }
+  .tp { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; background: var(--grey-soft); height: auto; }
+  .tile span.nmx { display: block; padding: 6px 8px 8px; font-size: 13px; line-height: 1.3; min-height: calc(2.6em + 14px); }
+  .thumb { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: var(--grey-soft); }
+  .thumb.lg { width: 64px; height: 64px; border-radius: 12px; }
+  .ph { display: grid; place-items: center; color: #B9A999; }
+  .ph svg { width: 45%; height: 45%; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .sel .who-item { display: flex; align-items: center; gap: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="hd"><h1 id="title">Didough Stock</h1><span class="who" id="who" hidden></span></div>
+  <div class="lead" id="lead">กำลังเปิด…</div>
+</header>
+<main id="app"><div class="center">กำลังโหลด…</div></main>
+<div class="bar" id="bar" hidden><div class="inner"><button class="btn" id="submit"></button></div></div>
+<nav class="tabs" id="tabs" hidden>
+  <button data-page="waste"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>แจ้งของเสีย</button>
+  <button data-page="receive"><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>ของถึงแล้ว</button>
+  <button data-page="count"><svg viewBox="0 0 24 24"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2"/><path d="M8.5 13.5l2.5 2.5 4.5-5"/></svg>นับสต็อก</button>
+  <button data-page="stock"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>ดูสต็อก</button>
+</nav>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<script>
+const LIFF_ID = '2012072902-5VIFUdiA';
+const API = 'https://script.google.com/macros/s/AKfycbxMg3RDd-emU7PCk4jR8ayC2zxvv9sEKG16Y2O8sk_3ZAwYcRGaoTnxtAwsl4EBGqni/exec';
+const PAGES = {
+  waste: ['แจ้งของเสีย', 'ขนมที่ทิ้ง ทำใหม่ หรือขายไม่ได้'],
+  receive: ['ของถึงแล้ว', 'ใส่จำนวนที่มาถึงจริงรอบนี้ ทยอยมาก็กรอกทีละรอบ'],
+  count: ['นับสต็อก', 'นับของใน freezer แล้วใส่จำนวนจริง'],
+  stock: ['ดูสต็อก', 'ตัวเลขล่าสุดจากระบบ'],
+};
+const REASONS = ['ไหม้', 'ส่งผิดทำใหม่', 'ตก / เสียหาย', 'หมดอายุ', 'อื่นๆ'];
+const S = { page: 'waste', items: [], name: '', token: '', order: '', waste: { qty: 1 }, receive: {}, count: {}, q: {}, countFilter: 'all', img: {}, receiveDate: '', showDate: '' };
+const PH = '<svg viewBox="0 0 24 24"><path d="M4.5 12.5C4.5 8.4 7.9 6 12 6s7.5 2.4 7.5 6.5V18h-15z"/><path d="M9 9.5l1.5 2M12 9l0 2.5M15 9.5l-1.5 2"/></svg>';
+function pic(name, cls) {
+  const src = S.img[name];
+  return src ? '<img class="' + cls + '" src="' + esc(src) + '" alt="" loading="lazy" width="240" height="240">' : '<span class="' + cls + ' ph" aria-hidden="true">' + PH + '</span>';
+}
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = (n) => (Math.round(Number(n) * 10) / 10).toLocaleString('th-TH');
+const sel = (attr, name) => document.querySelector('[' + attr + '="' + CSS.escape(name) + '"]');
+
+async function api(op, extra) {
+  const r = await fetch(API, { method: 'POST', body: JSON.stringify(Object.assign({ form: true, op, idToken: S.token }, extra || {})) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
+  return j;
+}
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
+function pageFromUrl() {
+  const p = new URLSearchParams(location.search);
+  let page = p.get('page');
+  if (!page && p.get('liff.state')) page = new URLSearchParams(p.get('liff.state').replace(/^\?/, '')).get('page');
+  return PAGES[page] ? page : 'waste';
+}
+function groups(list) {
+  const out = [];
+  list.forEach((it) => {
+    let g = out.find((x) => x.cat === it.cat);
+    if (!g) out.push(g = { cat: it.cat, items: [] });
+    g.items.push(it);
+  });
+  return out;
+}
+function filtered(page) {
+  const q = (S.q[page] || '').trim();
+  return q ? S.items.filter((i) => i.name.toLowerCase().includes(q.toLowerCase())) : S.items;
+}
+function unitOf(name) {
+  const it = S.items.find((i) => i.name === name);
+  return it ? it.unit : 'ชิ้น';
+}
+const TH_DOW = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+const TH_MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+function ymd(d) { const z = (n) => String(n).padStart(2, '0'); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); }
+function daysAgo(n) { const d = new Date(); d.setDate(d.getDate() - n); return ymd(d); }
+function dayLabel(v) {
+  if (!v || v === daysAgo(0)) return 'วันนี้';
+  const d = new Date(v + 'T12:00:00');
+  const base = TH_DOW[d.getDay()] + ' ' + d.getDate() + ' ' + TH_MON[d.getMonth()];
+  return v === daysAgo(1) ? 'เมื่อวาน (' + base + ')' : base;
+}
+function dayShort(v) {
+  if (!v || v === daysAgo(0)) return '';
+  if (v === daysAgo(1)) return 'เมื่อวาน';
+  const d = new Date(v + 'T12:00:00');
+  return d.getDate() + ' ' + TH_MON[d.getMonth()];
+}
+/** วันนี้ / เมื่อวาน / เลือกวันอื่น (ย้อนได้ 7 วัน) ค่าว่าง = วันนี้ */
+function datePicker(key, value) {
+  const yest = daysAgo(1), other = value && value !== yest && value !== daysAgo(0);
+  const chip = (v, label, on) => '<button class="chip ' + (on ? 'on' : '') + '" data-dk="' + key + '" data-dv="' + v + '">' + label + '</button>';
+  return '<div class="chips">' + chip('', 'วันนี้', !value || value === daysAgo(0)) + chip(yest, 'เมื่อวาน', value === yest) +
+    chip('other', other ? dayLabel(value) : 'เลือกวันอื่น', other) + '</div>' +
+    (S.showDate === key ? '<input type="date" class="search" id="dt-' + key + '" min="' + daysAgo(7) + '" max="' + daysAgo(0) + '" value="' + (value || daysAgo(0)) + '" style="margin-top:10px">' : '');
+}
+function bindDate(key, get, set, rerender) {
+  document.querySelectorAll('[data-dk="' + key + '"]').forEach((b) => b.onclick = () => {
+    if (b.dataset.dv === 'other') { S.showDate = key; rerender(); const el = $('dt-' + key); if (el) { el.focus(); try { el.showPicker(); } catch (e) { /* not supported */ } } return; }
+    S.showDate = ''; set(b.dataset.dv); rerender();
+  });
+  const el = $('dt-' + key);
+  if (el) el.onchange = () => {
+    const v = el.value;
+    if (!v || v > daysAgo(0) || v < daysAgo(7)) { toast('เลือกได้แค่ 7 วันที่ผ่านมา'); return; }
+    set(v === daysAgo(0) ? '' : v); S.showDate = ''; rerender();
+  };
+}
+function setPage(page) {
+  S.page = page;
+  try { history.replaceState(null, '', location.pathname + '?page=' + page); } catch (e) { /* preview */ }
+  render();
+  window.scrollTo(0, 0);
+}
+function bar(label, enabled, onClick) {
+  $('bar').hidden = !label;
+  const b = $('submit');
+  b.textContent = label || '';
+  b.disabled = !enabled;
+  b.onclick = onClick;
+}
+function render() {
+  $('title').textContent = PAGES[S.page][0];
+  $('lead').textContent = PAGES[S.page][1];
+  document.querySelectorAll('nav.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.page === S.page));
+  ({ waste: renderWaste, receive: renderReceive, count: renderCount, stock: renderStock })[S.page]();
+}
+function searchBox(page, placeholder) {
+  return '<input class="search" id="q" type="search" placeholder="' + placeholder + '" value="' + esc(S.q[page] || '') + '">';
+}
+function bindSearch(page, rerender) {
+  $('q').oninput = (e) => {
+    S.q[page] = e.target.value;
+    const pos = e.target.selectionStart;
+    rerender();
+    const el = $('q');
+    el.focus();
+    try { el.setSelectionRange(pos, pos); } catch (err) { /* type=search */ }
+  };
+}
+function sheet(title, sub, lines, confirmLabel, onConfirm) {
+  const bg = document.createElement('div');
+  bg.className = 'sheet-bg';
+  bg.innerHTML = '<div class="sheet" role="dialog" aria-modal="true"><h3>' + esc(title) + '</h3><div class="hint">' + esc(sub) + '</div>' +
+    '<div class="list">' + lines.map((l) => '<div class="li"><span>' + esc(l[0]) + '</span><b>' + l[1] + '</b></div>').join('') + '</div>' +
+    '<div class="actions"><button class="btn ghost" id="sh-back">แก้ไข</button><button class="btn" id="sh-ok">' + esc(confirmLabel) + '</button></div></div>';
+  document.body.appendChild(bg);
+  const close = () => bg.remove();
+  bg.onclick = (e) => { if (e.target === bg) close(); };
+  $('sh-back').onclick = close;
+  $('sh-ok').onclick = async () => {
+    $('sh-ok').disabled = true;
+    $('sh-ok').textContent = 'กำลังบันทึก…';
+    try { await onConfirm(); close(); } catch (e) { close(); fail(e); }
+  };
+}
+
+/* ---------- แจ้งของเสีย ---------- */
+function renderWaste() {
+  const w = S.waste;
+  let html;
+  if (!w.item) {
+    const list = filtered('waste');
+    const q = (S.q.waste || '').trim();
+    const top = q ? [] : S.items.filter((i) => Number(i.perDay) > 0).sort((a, b) => b.perDay - a.perDay).slice(0, 6);
+    const chips = (arr) => '<div class="tiles">' + arr.map((i) => '<button class="tile" data-item="' + esc(i.name) + '">' + pic(i.name, 'tp') + '<span class="nmx">' + esc(i.name) + '</span></button>').join('') + '</div>';
+    html = '<div class="card"><div class="step"><span class="n">1</span>ขนมอะไร</div>' + searchBox('waste', 'ค้นหา เช่น ชิโอะ') +
+      (top.length ? '<div class="cat">ใช้บ่อย</div>' + chips(top) : '') +
+      groups(list).map((g) => '<div class="cat">' + esc(g.cat) + '</div>' + chips(g.items)).join('') +
+      (list.length ? '' : '<div class="empty">ไม่เจอ ลองพิมพ์คำอื่น</div>') + '</div>';
+  } else {
+    html = '<div class="card sel"><div class="who-item">' + pic(w.item, 'thumb lg') + '<div><div class="hint">ขนม</div><b>' + esc(w.item) + '</b></div></div><button class="link" id="chg">เปลี่ยน</button></div>' +
+      '<div class="card"><div class="step"><span class="n">2</span>เสียกี่' + esc(unitOf(w.item)) + '</div>' +
+      '<div class="big-step"><button data-step="-1" aria-label="ลด">−</button><input id="qty" inputmode="numeric" value="' + w.qty + '" aria-label="จำนวน">' +
+      '<button data-step="1" aria-label="เพิ่ม">+</button></div></div>' +
+      '<div class="card"><div class="step"><span class="n">3</span>เพราะอะไร</div><div class="chips">' +
+      REASONS.map((r) => '<button class="chip ' + (w.reason === r ? 'on' : '') + '" data-reason="' + esc(r) + '">' + esc(r) + '</button>').join('') + '</div>' +
+      (w.showNote || w.note ? '<textarea id="note" placeholder="เช่น เตาร้อนเกิน">' + esc(w.note || '') + '</textarea>' : '<button class="link" id="addnote">+ เพิ่มหมายเหตุ</button>') +
+      '</div>' +
+      '<div class="card"><div class="step"><span class="n">4</span>เสียวันไหน</div>' + datePicker('w', w.date) + '</div>';
+  }
+  $('app').innerHTML = html;
+  if (!w.item) {
+    bindSearch('waste', renderWaste);
+    document.querySelectorAll('[data-item]').forEach((b) => b.onclick = () => { w.item = b.dataset.item; renderWaste(); window.scrollTo(0, 0); });
+  } else {
+    $('chg').onclick = () => { w.item = ''; renderWaste(); };
+    document.querySelectorAll('[data-step]').forEach((b) => b.onclick = () => { w.qty = Math.max(1, (Number(w.qty) || 1) + Number(b.dataset.step)); $('qty').value = w.qty; wasteBar(); });
+    $('qty').oninput = (e) => { w.qty = Math.max(0, parseInt(e.target.value, 10) || 0); wasteBar(); };
+    $('qty').onfocus = (e) => e.target.select();
+    document.querySelectorAll('[data-reason]').forEach((b) => b.onclick = () => { w.reason = b.dataset.reason; document.querySelectorAll('[data-reason]').forEach((x) => x.classList.toggle('on', x === b)); wasteBar(); });
+    if ($('addnote')) $('addnote').onclick = () => { w.showNote = true; renderWaste(); $('note').focus(); };
+    if ($('note')) $('note').oninput = (e) => { w.note = e.target.value; };
+    bindDate('w', () => w.date, (v) => { w.date = v; }, renderWaste);
+  }
+  wasteBar();
+}
+function wasteBar() {
+  const w = S.waste;
+  if (!w.item) return bar('', false);
+  if (!(w.qty > 0)) return bar('ใส่จำนวน', false);
+  if (!w.reason) return bar('เลือกสาเหตุ', false);
+  bar('บันทึก · ' + w.item + ' ' + w.qty + ' ' + unitOf(w.item) + ' · ' + w.reason + (w.date ? ' · ' + dayShort(w.date) : ''), true, async () => {
+    $('submit').disabled = true;
+    $('submit').textContent = 'กำลังบันทึก…';
+    try {
+      await api('waste', { item: w.item, qty: w.qty, reason: w.reason, note: w.note || '', date: w.date || '' });
+      done('แจ้งของเสียแล้ว', w.item + ' ' + w.qty + ' ' + unitOf(w.item) + ' (' + w.reason + ')\nเสีย' + dayLabel(w.date), 'แจ้งรายการต่อไป', () => { S.waste = { qty: 1 }; S.q.waste = ''; S.showDate = ''; render(); });
+    } catch (e) { fail(e); }
+  });
+}
+
+/* ---------- ของถึงแล้ว ---------- */
+function renderReceive() {
+  const r = S.receive;
+  const list = filtered('receive');
+  $('app').innerHTML = '<div class="card"><div class="step" style="margin-bottom:8px">ของถึงวันไหน</div>' + datePicker('r', S.receiveDate) + '</div>' +
+    '<div class="card">' + searchBox('receive', 'ค้นหาขนม') + '</div>' +
+    groups(list).map((g) => '<div class="cat">' + esc(g.cat) + '</div><div class="card">' +
+      g.items.map((i) => '<div class="row' + (r[i.name] ? ' on' : '') + '" data-row="' + esc(i.name) + '">' + pic(i.name, 'thumb') + '<div class="nm">' + esc(i.name) + '<div class="meta">' + esc(i.unit) + '</div></div>' +
+        '<div class="mini"><button data-dec="' + esc(i.name) + '" aria-label="ลด">−</button>' +
+        '<input class="num" data-rcv="' + esc(i.name) + '" inputmode="numeric" value="' + (r[i.name] || '') + '" placeholder="0" aria-label="จำนวน ' + esc(i.name) + '">' +
+        '<button data-inc="' + esc(i.name) + '" aria-label="เพิ่ม">+</button></div></div>').join('') + '</div>').join('') +
+    (list.length ? '' : '<div class="empty">ไม่เจอ ลองพิมพ์คำอื่น</div>');
+  bindSearch('receive', renderReceive);
+  bindDate('r', () => S.receiveDate, (v) => { S.receiveDate = v; }, renderReceive);
+  const set = (name, v) => {
+    if (v > 0) r[name] = v; else delete r[name];
+    const el = sel('data-rcv', name);
+    if (el && document.activeElement !== el) el.value = v > 0 ? v : '';
+    sel('data-row', name).classList.toggle('on', v > 0);
+    receiveBar();
+  };
+  document.querySelectorAll('[data-inc]').forEach((b) => b.onclick = () => set(b.dataset.inc, (r[b.dataset.inc] || 0) + 1));
+  document.querySelectorAll('[data-dec]').forEach((b) => b.onclick = () => set(b.dataset.dec, Math.max(0, (r[b.dataset.dec] || 0) - 1)));
+  document.querySelectorAll('[data-rcv]').forEach((el) => { el.oninput = () => set(el.dataset.rcv, parseInt(el.value, 10) || 0); el.onfocus = () => el.select(); });
+  receiveBar();
+}
+function receiveBar() {
+  const r = S.receive;
+  const lines = Object.keys(r).filter((k) => r[k] > 0).map((k) => ({ item: k, qty: r[k] }));
+  if (!lines.length) return bar('ใส่จำนวนที่มาถึง', false);
+  bar('ตรวจและบันทึก (' + lines.length + ' รายการ)', true, () => {
+    const total = lines.reduce((s, l) => s + l.qty, 0);
+    sheet('ตรวจก่อนบันทึก', 'ของถึง' + dayLabel(S.receiveDate) + ' · ' + lines.length + ' รายการ รวม ' + total, lines.map((l) => [l.item, l.qty + ' ' + esc(unitOf(l.item))]), 'ยืนยันบันทึก', async () => {
+      await api('receive', { lines, note: '', date: S.receiveDate || '' });
+      done('บันทึกของถึงแล้ว', 'ของถึง' + dayLabel(S.receiveDate) + '\n' + lines.map((l) => l.item + ' ' + l.qty + ' ' + unitOf(l.item)).join('\n'), 'บันทึกรอบใหม่', () => { S.receive = {}; S.q.receive = ''; S.receiveDate = ''; S.showDate = ''; render(); });
+    });
+  });
+}
+
+/* ---------- นับสต็อก ---------- */
+function sysOf(i) {
+  return i.counted === '' || i.counted == null ? null : Math.max(0, Math.round(Number(i.left) || 0));
+}
+function renderCount() {
+  const c = S.count;
+  const doneN = Object.keys(c).length;
+  const all = S.items.length;
+  let list = filtered('count');
+  if (S.countFilter === 'todo') list = list.filter((i) => c[i.name] == null);
+  $('app').innerHTML = '<div class="card"><div class="hint">ตรงกับระบบ กด "= ระบบ" · ไม่ตรง พิมพ์จำนวนจริง · ยังไม่ได้นับ เว้นว่าง</div>' +
+    '<div style="margin-top:10px;font-weight:600" id="cnt-done">นับแล้ว ' + doneN + ' / ' + all + '</div>' +
+    '<div class="progress"><i id="cnt-bar" style="width:' + (all ? Math.round(doneN / all * 100) : 0) + '%"></i></div>' +
+    '<div class="seg"><button data-f="all" class="' + (S.countFilter === 'all' ? 'on' : '') + '">ทั้งหมด</button><button data-f="todo" id="cnt-todo" class="' + (S.countFilter === 'todo' ? 'on' : '') + '">ยังไม่นับ (' + (all - doneN) + ')</button></div>' +
+    '<div style="margin-top:10px">' + searchBox('count', 'ค้นหาขนม') + '</div></div>' +
+    groups(list).map((g) => '<div class="cat">' + esc(g.cat) + '</div><div class="card">' + g.items.map(countRow).join('') + '</div>').join('') +
+    (list.length ? '' : '<div class="empty">' + (S.countFilter === 'todo' ? 'นับครบทุกตัวแล้ว' : 'ไม่เจอ ลองพิมพ์คำอื่น') + '</div>');
+  bindSearch('count', renderCount);
+  document.querySelectorAll('[data-f]').forEach((b) => b.onclick = () => { S.countFilter = b.dataset.f; renderCount(); });
+  document.querySelectorAll('[data-same]').forEach((b) => b.onclick = () => setCount(b.dataset.same, Number(b.dataset.sys)));
+  document.querySelectorAll('[data-cnt]').forEach((el) => { el.oninput = () => { const t = el.value.trim(); setCount(el.dataset.cnt, t === '' ? null : Math.max(0, parseInt(t, 10) || 0), true); }; el.onfocus = () => el.select(); });
+  countBar();
+}
+function countRow(i) {
+  const c = S.count, sys = sysOf(i), v = c[i.name];
+  const diff = v != null && sys != null && v !== sys ? v - sys : 0;
+  return '<div class="row' + (v != null ? ' okrow' : '') + '" data-row="' + esc(i.name) + '">' + pic(i.name, 'thumb') + '<div class="nm">' + esc(i.name) +
+    '<div class="meta">' + (sys == null ? 'ยังไม่เคยนับ' : 'ระบบ ' + sys + ' ' + esc(i.unit)) + '</div>' +
+    '<div class="diff" data-diff="' + esc(i.name) + '">' + (diff ? 'ต่างจากระบบ ' + (diff > 0 ? '+' : '') + diff : '') + '</div></div>' +
+    (sys == null ? '' : '<button class="same" data-same="' + esc(i.name) + '" data-sys="' + sys + '">= ระบบ</button>') +
+    '<input class="num" data-cnt="' + esc(i.name) + '" inputmode="numeric" value="' + (v != null ? v : '') + '" placeholder="-" aria-label="จำนวนที่นับ ' + esc(i.name) + '"></div>';
+}
+function setCount(name, v, typing) {
+  const c = S.count;
+  if (v === null) delete c[name]; else c[name] = v;
+  const it = S.items.find((i) => i.name === name);
+  const sys = sysOf(it);
+  const el = sel('data-cnt', name);
+  if (el && !typing) el.value = v === null ? '' : v;
+  sel('data-row', name).classList.toggle('okrow', v !== null);
+  const d = v != null && sys != null && v !== sys ? v - sys : 0;
+  sel('data-diff', name).textContent = d ? 'ต่างจากระบบ ' + (d > 0 ? '+' : '') + d : '';
+  if (S.countFilter === 'todo' && !typing && v !== null) { renderCount(); return; }
+  const doneN = Object.keys(c).length;
+  $('cnt-bar').style.width = Math.round(doneN / S.items.length * 100) + '%';
+  $('cnt-done').textContent = 'นับแล้ว ' + doneN + ' / ' + S.items.length;
+  $('cnt-todo').textContent = 'ยังไม่นับ (' + (S.items.length - doneN) + ')';
+  countBar();
+}
+function countBar() {
+  const c = S.count;
+  const lines = Object.keys(c).map((k) => ({ item: k, counted: c[k] }));
+  if (!lines.length) return bar('ใส่จำนวนที่นับได้', false);
+  bar('ตรวจและบันทึก (' + lines.length + ' รายการ)', true, () => {
+    const rows = lines.map((l) => {
+      const sys = sysOf(S.items.find((i) => i.name === l.item));
+      const d = sys == null ? '' : l.counted - sys;
+      return [l.item, l.counted + ' ' + esc(unitOf(l.item)) + (d ? ' <span style="color:var(--orange)">(' + (d > 0 ? '+' : '') + d + ')</span>' : '')];
+    });
+    const diffs = lines.filter((l) => { const s = sysOf(S.items.find((i) => i.name === l.item)); return s != null && s !== l.counted; }).length;
+    sheet('ตรวจก่อนบันทึก', 'นับ ' + lines.length + ' รายการ' + (diffs ? ' · ไม่ตรงกับระบบ ' + diffs + ' รายการ' : ' · ตรงกับระบบทั้งหมด'), rows, 'ยืนยันบันทึก', async () => {
+      const r = await api('count', { lines });
+      S.items = r.items || S.items;
+      done('บันทึกการนับแล้ว', lines.length + ' รายการ ตัวเลขในระบบอัปเดตแล้ว', 'กลับไปหน้านับ', () => { S.count = {}; S.q.count = ''; render(); });
+    });
+  });
+}
+
+/* ---------- ดูสต็อก ---------- */
+async function renderStock() {
+  bar('', false);
+  $('app').innerHTML = '<div class="center">กำลังโหลด…</div>';
+  try {
+    const r = await api('stock');
+    S.items = r.items || S.items;
+    S.order = r.order || '';
+  } catch (e) { fail(e); return; }
+  if (S.page !== 'stock') return;
+  const by = { red: [], orange: [], green: [], grey: [] };
+  S.items.forEach((i) => {
+    const l = String(i.level || '');
+    if (/หมด|ด่วน/.test(l)) by.red.push(i);
+    else if (/ควรสั่ง/.test(l)) by.orange.push(i);
+    else if (/พอ/.test(l)) by.green.push(i);
+    else by.grey.push(i);
+  });
+  const byDays = (a, b) => (Number(a.days) || 0) - (Number(b.days) || 0);
+  by.red.sort(byDays);
+  by.orange.sort(byDays);
+  const row = (i) => '<div class="row">' + pic(i.name, 'thumb') + '<div class="nm">' + esc(i.name) + '</div><div style="text-align:right;flex-shrink:0">' +
+    (sysOf(i) == null ? '<span class="meta">' + esc(String(i.level).replace(/^\S+\s/, '')) + '</span>' :
+      '<b>' + fmt(Math.max(0, i.left)) + '</b> ' + esc(i.unit) + (i.days !== '' && i.days != null ? '<div class="meta">พอ ' + fmt(i.days) + ' วัน</div>' : '')) + '</div></div>';
+  const sec = (cls, title, list) => list.length ? '<div class="lvl ' + cls + '"><h2><span class="dot ' + cls + '"></span>' + title + ' · ' + list.length + '</h2>' + list.map(row).join('') + '</div>' : '';
+  const pill = (cls, label, n) => '<span class="pill"><span class="dot ' + cls + '"></span>' + label + ' ' + n + '</span>';
+  $('app').innerHTML = '<div class="pills">' + pill('red', 'ด่วน', by.red.length) + pill('orange', 'ควรสั่ง', by.orange.length) + pill('green', 'พอ', by.green.length) + (by.grey.length ? pill('grey', 'ยังไม่นับ', by.grey.length) : '') + '</div>' +
+    (S.order ? '<div class="card"><div class="step" style="margin-bottom:0">รายการแนะนำสั่งตรัง</div><div class="order" id="order">' + esc(S.order) + '</div><button class="btn ghost" id="copy">คัดลอกรายการ</button></div>' : '') +
+    sec('red', 'ด่วน สั่งวันนี้', by.red) + sec('orange', 'ควรสั่งใน 1-2 วัน', by.orange) + sec('green', 'พอขาย', by.green) + sec('grey', 'ยังไม่นับ / ยังไม่มียอดขาย', by.grey);
+  if ($('copy')) $('copy').onclick = async () => {
+    try { await navigator.clipboard.writeText(S.order); toast('คัดลอกแล้ว ไปวางในแชทกับตรังได้เลย'); }
+    catch (e) { const rg = document.createRange(); rg.selectNodeContents($('order')); getSelection().removeAllRanges(); getSelection().addRange(rg); toast('เลือกข้อความแล้ว กดค้างเพื่อคัดลอก'); }
+  };
+}
+
+/* ---------- ทั่วไป ---------- */
+function done(title, detail, againLabel, again) {
+  bar('', false);
+  window.scrollTo(0, 0);
+  $('app').innerHTML = '<div class="card done"><div class="tick"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>' +
+    '<h2 style="margin:0 0 6px">' + esc(title) + '</h2><div class="hint" style="white-space:pre-line;font-size:15px">' + esc(detail) + '</div>' +
+    '<div style="margin-top:20px;display:grid;gap:10px"><button class="btn" id="again">' + esc(againLabel) + '</button>' +
+    '<button class="btn ghost" id="close">ปิด</button></div></div>';
+  $('again').onclick = again;
+  $('close').onclick = () => { if (window.liff && liff.isInClient()) liff.closeWindow(); else again(); };
+}
+function fail(e) {
+  if (/login/i.test(e.message)) { location.reload(); return; }
+  toast('บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง (' + e.message + ')');
+  render();
+}
+function pending(me) {
+  $('title').textContent = 'รออนุมัติ';
+  $('lead').textContent = '';
+  $('tabs').hidden = true;
+  $('app').innerHTML = '<div class="card done"><h2 style="margin:0 0 8px">' + (me.status === 'ระงับ' ? 'บัญชีนี้ถูกระงับ' : 'ส่งคำขอใช้งานแล้ว') + '</h2>' +
+    '<div class="hint" style="font-size:15px">ชื่อ LINE: ' + esc(me.name || '') + '<br>' + (me.status === 'ระงับ' ? 'ติดต่อพี่ที่ดูแลร้าน' : 'รอพี่อนุมัติก่อน อนุมัติแล้วกดเมนูนี้อีกครั้งได้เลย') + '</div></div>';
+}
+
+document.querySelectorAll('nav.tabs button').forEach((b) => b.onclick = () => setPage(b.dataset.page));
+
+(async () => {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+    S.token = liff.getIDToken();
+    S.page = pageFromUrl();
+    const [me, imgs] = await Promise.all([api('items'), fetch('images.json', { cache: 'no-cache' }).then((r) => r.json()).catch(() => ({}))]);
+    S.img = imgs || {};
+    if (me.status !== 'อนุมัติ') { pending(me); return; }
+    S.items = me.items || [];
+    S.name = me.name || '';
+    $('who').textContent = S.name;
+    $('who').hidden = !S.name;
+    $('tabs').hidden = false;
+    render();
+  } catch (e) {
+    $('lead').textContent = '';
+    $('app').innerHTML = '<div class="center err">เปิดไม่สำเร็จ: ' + esc(e.message) + '<br><br>ลองปิดแล้วกดเมนูในแชทใหม่</div>';
+  }
+})();
+</script>
+</body>
+</html>
