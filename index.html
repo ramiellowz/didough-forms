@@ -101,6 +101,7 @@
   .b-waste { background: var(--red-soft); color: var(--red); } .b-offapp { background: #E6EEF8; color: #3B6597; }
   .b-receive { background: var(--orange-soft); color: var(--orange); } .b-count { background: var(--ok-soft); color: var(--ok); }
   .b-late { background: var(--grey-soft); color: var(--muted); }
+  .b-eat { background: #EEE8F6; color: #6A4C93; }
   .del { border: 1px solid #F2CDCD; background: #fff; color: var(--red); border-radius: 10px; height: 36px; padding: 0 12px; font-size: 13px; font-weight: 600; flex-shrink: 0; }
   .toast { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 12px; z-index: 30; font-size: 15px; max-width: 90vw; }
   .center { text-align: center; padding: 48px 16px; color: var(--muted); }
@@ -124,7 +125,7 @@
 <main id="app"><div class="center">กำลังโหลด…</div></main>
 <div class="bar" id="bar" hidden><div class="inner"><button class="btn" id="submit"></button></div></div>
 <nav class="tabs" id="tabs" hidden>
-  <button data-page="waste"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>ของเสีย</button>
+  <button data-page="waste"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>เสีย/ทานเอง</button>
   <button data-page="offapp"><svg viewBox="0 0 24 24"><path d="M4 9l1.5-5h13L20 9M4 9h16v11H4zM9 20v-6h6v6"/></svg>ขายนอกแอป</button>
   <button data-page="receive"><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>ของถึงแล้ว</button>
   <button data-page="count"><svg viewBox="0 0 24 24"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2"/><path d="M8.5 13.5l2.5 2.5 4.5-5"/></svg>นับสต็อก</button>
@@ -136,17 +137,18 @@ const LIFF_ID = '2012072902-5VIFUdiA';
 const API = 'https://script.google.com/macros/s/AKfycbxMg3RDd-emU7PCk4jR8ayC2zxvv9sEKG16Y2O8sk_3ZAwYcRGaoTnxtAwsl4EBGqni/exec';
 const CACHE_KEY = 'didough:v2';
 const PAGES = {
-  waste: ['แจ้งของเสีย', 'ขนมที่ทิ้ง ทำใหม่ หรือขายไม่ได้'],
+  waste: ['ของเสีย / ทานเอง', 'ขนมที่ทิ้ง ทำใหม่ ขายไม่ได้ หรือทานเอง'],
   offapp: ['ขายนอกแอป', 'ขายหน้าร้าน Robinhood หรือช่องทางที่ระบบดึงเองไม่ได้'],
   receive: ['ของถึงแล้ว', 'ใส่จำนวนที่มาถึงจริงรอบนี้ ทยอยมาก็กรอกทีละรอบ'],
   count: ['นับสต็อก', 'นับรวมช่องฟรีซ + ตู้เย็น (ที่ย้ายมารออุ่น) · คุกกี้นับที่ชั้นวาง'],
   stock: ['สต็อก', 'ตัวเลขล่าสุดและรายการที่แจ้งไปแล้ว'],
 };
-const REASONS = ['ไหม้', 'ส่งผิดทำใหม่', 'ตก / เสียหาย', 'หมดอายุ', 'อื่นๆ'];
+const EAT = 'ทานเอง';
+const REASONS = ['ไหม้', 'ส่งผิดทำใหม่', 'ตก / เสียหาย', 'หมดอายุ', 'อื่นๆ', EAT];
 const CHANNELS = ['หน้าร้าน', 'Robinhood', 'อื่นๆ'];
 const KIND = { waste: 'ของเสีย', offapp: 'ขายนอกแอป', receive: 'ของถึง', count: 'นับสต็อก' };
 const S = {
-  page: 'waste', items: [], name: '', token: '', order: '', img: {}, history: null,
+  page: 'waste', items: [], people: [], name: '', token: '', order: '', img: {}, history: null,
   waste: { qty: 1 }, receive: {}, offapp: {}, count: {}, q: {}, countFilter: 'all',
   receiveDate: '', offappDate: '', channel: '', showDate: '', stockView: 'now', histKind: 'all', histMine: false, touched: false,
 };
@@ -160,7 +162,7 @@ const PH = '<svg viewBox="0 0 24 24"><path d="M4.5 12.5C4.5 8.4 7.9 6 12 6s7.5 2
 /* ---------- ข้อมูล ---------- */
 function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch (e) { return null; } }
 function saveCache() {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ items: S.items, name: S.name, img: S.img, history: S.history, ts: Date.now() })); } catch (e) { /* private mode */ }
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ items: S.items, people: S.people, name: S.name, img: S.img, history: S.history, ts: Date.now() })); } catch (e) { /* private mode */ }
 }
 async function api(op, extra) {
   await ready;
@@ -168,6 +170,7 @@ async function api(op, extra) {
   const j = await r.json();
   if (!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
   if (j.items) S.items = j.items;
+  if (j.people) S.people = j.people;
   if (j.history) S.history = j.history;
   if (j.items || j.history) saveCache();
   return j;
@@ -329,13 +332,13 @@ function renderWaste() {
   } else {
     const unit = unitOf(w.item);
     html = '<div class="card"><div class="sel"><div class="who-item">' + pic(w.item, 'thumb lg') + '<div><div class="hint">ขนม</div><b>' + esc(w.item) + '</b></div></div><button class="link" id="chg">เปลี่ยน</button></div><div id="dup"></div></div>' +
-      '<div class="card"><div class="step"><span class="n">2</span>เสียกี่' + esc(unit) + '</div>' +
+      '<div class="card"><div class="step"><span class="n">2</span>จำนวนกี่' + esc(unit) + '</div>' +
       '<div class="big-step"><button data-step="-1" aria-label="ลด">−</button><input id="qty" inputmode="' + (stepOf(w.item) < 1 ? 'decimal' : 'numeric') + '" value="' + fq(w.qty) + '" aria-label="จำนวน">' +
       '<button data-step="1" aria-label="เพิ่ม">+</button></div>' + (unit === 'ปอนด์' ? '<div class="hint" style="text-align:center;margin-top:6px">1 ออเดอร์ (2 ชิ้น) = ½ ปอนด์ · กด + / − ทีละ ½</div>' : stepOf(w.item) === 0.5 ? '<div class="hint" style="text-align:center;margin-top:6px">1 ออเดอร์ = ½ ' + esc(unit) + ' · กด + / − ทีละ ½</div>' : '') + '</div>' +
       '<div class="card"><div class="step"><span class="n">3</span>เพราะอะไร</div><div class="chips">' +
-      REASONS.map((r) => '<button class="chip ' + (w.reason === r ? 'on' : '') + '" data-reason="' + esc(r) + '">' + esc(r) + '</button>').join('') + '</div>' +
+      REASONS.map((r) => '<button class="chip ' + (w.reason === r ? 'on' : '') + '" data-reason="' + esc(r) + '">' + esc(r) + '</button>').join('') + '</div><div id="forwho"></div>' +
       (w.showNote || w.note ? '<textarea id="note" placeholder="เช่น อุ่นนานเกิน">' + esc(w.note || '') + '</textarea>' : '<button class="link" id="addnote">+ เพิ่มหมายเหตุ</button>') + '</div>' +
-      '<div class="card"><div class="step"><span class="n">4</span>เสียวันไหน</div>' + datePicker('w', w.date) + '</div>';
+      '<div class="card"><div class="step"><span class="n">4</span>วันไหน</div>' + datePicker('w', w.date) + '</div>';
   }
   $('app').innerHTML = html;
   if (!w.item) {
@@ -347,7 +350,8 @@ function renderWaste() {
     document.querySelectorAll('[data-step]').forEach((b) => b.onclick = () => { w.qty = Math.max(st, q4((Number(w.qty) || 0) + Number(b.dataset.step) * st)); $('qty').value = fq(w.qty); wasteBar(); });
     $('qty').oninput = (e) => { w.qty = Math.max(0, q4(parseFloat(e.target.value.replace('½', '.5').replace('¼', '.25').replace('¾', '.75')) || 0)); wasteBar(); };
     $('qty').onfocus = (e) => e.target.select();
-    document.querySelectorAll('[data-reason]').forEach((b) => b.onclick = () => { w.reason = b.dataset.reason; document.querySelectorAll('[data-reason]').forEach((x) => x.classList.toggle('on', x === b)); wasteBar(); });
+    document.querySelectorAll('[data-reason]').forEach((b) => b.onclick = () => { w.reason = b.dataset.reason; document.querySelectorAll('[data-reason]').forEach((x) => x.classList.toggle('on', x === b)); renderForWho(); wasteBar(); });
+    renderForWho();
     if ($('addnote')) $('addnote').onclick = () => { w.showNote = true; renderWaste(); $('note').focus(); };
     if ($('note')) $('note').oninput = (e) => { w.note = e.target.value; };
     bindDate('w', (v) => { w.date = v; }, renderWaste);
@@ -355,13 +359,29 @@ function renderWaste() {
   }
   wasteBar();
 }
+/** ทานเอง: ต้องบอกว่าใครสั่ง กดเลือกชื่อ ไม่ต้องพิมพ์ (คนนอกรายชื่อค่อยพิมพ์) */
+function renderForWho() {
+  const box = $('forwho');
+  const w = S.waste;
+  if (!box) return;
+  if (w.reason !== EAT) { box.innerHTML = ''; return; }
+  const names = S.people.slice();
+  if (w.forWho && !w.whoOther && names.indexOf(w.forWho) < 0) names.push(w.forWho);
+  box.innerHTML = '<div class="step" style="margin:14px 0 8px">ใครสั่ง</div><div class="chips">' +
+    names.map((n) => '<button class="chip ' + (!w.whoOther && w.forWho === n ? 'on' : '') + '" data-who="' + esc(n) + '">' + esc(n) + '</button>').join('') +
+    '<button class="chip ' + (w.whoOther ? 'on' : '') + '" id="who-more">คนอื่น</button></div>' +
+    (w.whoOther ? '<input class="search" id="who-other" placeholder="พิมพ์ชื่อ" maxlength="40" value="' + esc(w.forWho || '') + '" style="margin-top:10px">' : '');
+  box.querySelectorAll('[data-who]').forEach((b) => b.onclick = () => { w.whoOther = false; w.forWho = b.dataset.who; renderForWho(); wasteBar(); });
+  $('who-more').onclick = () => { w.whoOther = true; w.forWho = ''; renderForWho(); wasteBar(); $('who-other').focus(); };
+  if ($('who-other')) $('who-other').oninput = (e) => { w.forWho = e.target.value; wasteBar(); };
+}
 /** เตือนถ้าวันนั้นมีคนแจ้งขนมตัวเดียวกันไปแล้ว */
 function renderDup() {
   const box = $('dup');
   const w = S.waste;
   if (!box || !w.item || !S.history) return;
   const day = w.date || daysAgo(0);
-  const same = S.history.filter((h) => h.kind === 'waste' && h.item === w.item && ymd(new Date(h.t)) === day);
+  const same = S.history.filter((h) => h.kind === 'waste' && h.detail !== EAT && h.item === w.item && ymd(new Date(h.t)) === day);
   box.innerHTML = same.length ? '<div class="warn"><b>' + (day === daysAgo(0) ? 'วันนี้' : dayLabel(day)) + 'แจ้งไปแล้ว:</b><br>' +
     same.map((h) => esc(fq(h.qty) + ' ' + unitOf(h.item) + ' · ' + h.detail + ' · ' + hhmm(h.rep || h.t) + ' โดย ' + h.who)).join('<br>') +
     '<div class="hint" style="margin-top:4px">ถ้าเสียเพิ่มจริง แจ้งต่อได้เลย</div></div>' : '';
@@ -371,12 +391,15 @@ function wasteBar() {
   if (!w.item) return bar('', false);
   if (!(w.qty > 0)) return bar('ใส่จำนวน', false);
   if (!w.reason) return bar('เลือกสาเหตุ', false);
-  bar('บันทึก · ' + w.item + ' ' + fq(w.qty) + ' ' + unitOf(w.item) + ' · ' + w.reason + (w.date ? ' · ' + dayShort(w.date) : ''), true, async () => {
+  const eat = w.reason === EAT;
+  const who = eat ? String(w.forWho || '').trim() : '';
+  if (eat && !who) return bar('เลือกว่าใครสั่ง', false);
+  bar('บันทึก · ' + w.item + ' ' + fq(w.qty) + ' ' + unitOf(w.item) + ' · ' + w.reason + (eat ? ' · ' + who : '') + (w.date ? ' · ' + dayShort(w.date) : ''), true, async () => {
     $('submit').disabled = true;
     $('submit').textContent = 'กำลังบันทึก…';
     try {
-      await api('waste', { item: w.item, qty: w.qty, reason: w.reason, note: w.note || '', date: w.date || '' });
-      done('แจ้งของเสียแล้ว', w.item + ' ' + fq(w.qty) + ' ' + unitOf(w.item) + ' (' + w.reason + ')\nเสีย' + dayLabel(w.date), 'แจ้งรายการต่อไป', () => { S.waste = { qty: 1 }; S.q.waste = ''; S.showDate = ''; render(); });
+      await api('waste', { item: w.item, qty: w.qty, reason: w.reason, forWho: who, note: w.note || '', date: w.date || '' });
+      done(eat ? 'บันทึกทานเองแล้ว' : 'แจ้งของเสียแล้ว', w.item + ' ' + fq(w.qty) + ' ' + unitOf(w.item) + ' (' + w.reason + ')' + (eat ? '\nสั่งโดย ' + who + '\n' + dayLabel(w.date) : '\nเสีย' + dayLabel(w.date)), 'แจ้งรายการต่อไป', () => { S.waste = { qty: 1 }; S.q.waste = ''; S.showDate = ''; render(); });
     } catch (e) { fail(e); }
   });
 }
@@ -554,7 +577,7 @@ async function renderHistory() {
   const box = $('sv');
   if (!box) return;
   const kinds = ['all', 'waste', 'offapp', 'receive', 'count'];
-  const head = '<div class="chips" style="margin-bottom:10px">' + kinds.map((k) => '<button class="chip sm ' + (S.histKind === k ? 'on' : '') + '" data-hk="' + k + '">' + (k === 'all' ? 'ทั้งหมด' : KIND[k]) + '</button>').join('') + '</div>' +
+  const head = '<div class="chips" style="margin-bottom:10px">' + kinds.map((k) => '<button class="chip sm ' + (S.histKind === k ? 'on' : '') + '" data-hk="' + k + '">' + (k === 'all' ? 'ทั้งหมด' : k === 'waste' ? 'เสีย/ทานเอง' : KIND[k]) + '</button>').join('') + '</div>' +
     '<div class="seg" style="margin-bottom:6px"><button data-hm="0" class="' + (!S.histMine ? 'on' : '') + '">ทุกคน</button><button data-hm="1" class="' + (S.histMine ? 'on' : '') + '">ของฉัน</button></div>' +
     '<div class="hint" style="margin:0 2px 4px">ย้อนหลัง 7 วัน · ลบได้เฉพาะของตัวเองที่แจ้งวันนี้</div>';
   if (!S.history) { box.innerHTML = head + '<div class="center">กำลังโหลด…</div>'; bindHist(); await loadHistory(); return; }
@@ -564,9 +587,10 @@ async function renderHistory() {
   const body = Object.keys(byDay).sort().reverse().map((d) => '<div class="day">' + dayHead(d) + '</div><div class="card">' +
     byDay[d].map((h) => {
       const late = h.rep && ymd(new Date(h.rep)) !== ymd(new Date(h.t));
-      const detail = h.kind === 'count' ? (h.detail !== '' && h.detail != null && Number(h.detail) !== 0 ? 'ต่างจากระบบ ' + (h.detail > 0 ? '+' : '−') + fq(Math.abs(h.detail)) : 'นับได้') : (h.detail || '');
+      const isEat = h.kind === 'waste' && h.detail === EAT;
+      const detail = isEat ? (String(h.note || '').split(' · ')[0] || EAT) : h.kind === 'count' ? (h.detail !== '' && h.detail != null && Number(h.detail) !== 0 ? 'ต่างจากระบบ ' + (h.detail > 0 ? '+' : '−') + fq(Math.abs(h.detail)) : 'นับได้') : (h.detail || '');
       return '<div class="row">' + pic(h.item, 'thumb') + '<div class="nm">' + esc(h.item) + ' <b>' + fq(h.qty) + '</b> ' + esc(unitOf(h.item)) +
-        '<span class="badge b-' + h.kind + '">' + KIND[h.kind] + '</span>' + (late ? '<span class="badge b-late">แจ้งย้อนหลัง</span>' : '') +
+        '<span class="badge b-' + (isEat ? 'eat' : h.kind) + '">' + (isEat ? EAT : KIND[h.kind]) + '</span>' + (late ? '<span class="badge b-late">แจ้งย้อนหลัง</span>' : '') +
         '<div class="meta">' + esc([detail, (h.rep ? hhmm(h.rep) : hhmm(h.t)) + ' · ' + h.who].filter(Boolean).join(' · ')) + '</div></div>' +
         (h.canDelete ? '<button class="del" data-del="' + esc(h.key) + '">ลบ</button>' : '') + '</div>';
     }).join('') + '</div>').join('');
@@ -574,7 +598,7 @@ async function renderHistory() {
   bindHist();
   document.querySelectorAll('[data-del]').forEach((b) => b.onclick = () => {
     const h = S.history.find((x) => x.key === b.dataset.del);
-    sheet('ลบรายการนี้?', KIND[h.kind] + ' · ' + h.item + ' ' + fq(h.qty) + ' ' + unitOf(h.item) + ' · ' + hhmm(h.rep || h.t), [], 'ลบ', async () => {
+    sheet('ลบรายการนี้?', (h.kind === 'waste' && h.detail === EAT ? EAT : KIND[h.kind]) + ' · ' + h.item + ' ' + fq(h.qty) + ' ' + unitOf(h.item) + ' · ' + hhmm(h.rep || h.t), [], 'ลบ', async () => {
       await api('delete', { key: h.key });
       toast('ลบแล้ว');
       renderHistory();
@@ -645,7 +669,7 @@ function loadLiff() {
   // 1) โชว์จากข้อมูลที่จำไว้ในเครื่องทันที
   const cache = loadCache();
   if (cache && cache.items && cache.items.length) {
-    S.items = cache.items; S.name = cache.name || ''; S.img = cache.img || {}; S.history = cache.history || null;
+    S.items = cache.items; S.people = cache.people || []; S.name = cache.name || ''; S.img = cache.img || {}; S.history = cache.history || null;
     showApp();
   }
   fetch('images.json', { cache: 'no-cache' }).then((r) => r.json()).then((m) => { S.img = m || {}; saveCache(); }).catch(() => {});
