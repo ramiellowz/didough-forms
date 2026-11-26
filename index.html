@@ -150,7 +150,7 @@ const KIND = { waste: 'ของเสีย', offapp: 'ขายนอกแอ
 const S = {
   page: 'waste', items: [], people: [], name: '', token: '', order: '', img: {}, history: null,
   waste: { qty: 1 }, receive: {}, offapp: {}, count: {}, q: {}, countFilter: 'all',
-  receiveDate: '', offappDate: '', channel: '', showDate: '', stockView: 'now', histKind: 'all', histMine: false, touched: false,
+  receiveDate: '', offappDate: '', channel: '', showDate: '', stockView: 'now', stockCat: 'all', histKind: 'all', histMine: false, touched: false,
 };
 let resolveReady;
 const ready = new Promise((r) => { resolveReady = r; });
@@ -542,7 +542,13 @@ async function renderStockNow(fresh) {
   const box = $('sv');
   if (!box) return;
   const by = { red: [], orange: [], green: [], grey: [] };
-  S.items.forEach((i) => {
+  // filter by category (หมวด) from the chips on top; 'all' = every item
+  const cats = [];
+  S.items.forEach((i) => { if (i.cat && cats.indexOf(i.cat) < 0) cats.push(i.cat); });
+  if (S.stockCat !== 'all' && cats.indexOf(S.stockCat) < 0) S.stockCat = 'all';
+  const catChips = cats.length > 1 ? '<div class="chips" style="margin-bottom:12px">' + ['all'].concat(cats).map((c) =>
+    '<button class="chip sm ' + (S.stockCat === c ? 'on' : '') + '" data-sc="' + esc(c) + '">' + (c === 'all' ? 'ทั้งหมด' : esc(c)) + '</button>').join('') + '</div>' : '';
+  S.items.filter((i) => S.stockCat === 'all' || i.cat === S.stockCat).forEach((i) => {
     const l = String(i.level || '');
     if (/หมด|ด่วน/.test(l)) by.red.push(i);
     else if (/ควรสั่ง/.test(l)) by.orange.push(i);
@@ -557,10 +563,11 @@ async function renderStockNow(fresh) {
       '<b>' + fq(Math.max(0, i.left)) + '</b> ' + esc(i.unit) + (i.days !== '' && i.days != null ? '<div class="meta">พอ ' + (Math.round(i.days * 10) / 10) + ' วัน</div>' : '')) + '</div></div>';
   const sec = (cls, title, list) => list.length ? '<div class="lvl ' + cls + '"><h2><span class="dot ' + cls + '"></span>' + title + ' · ' + list.length + '</h2>' + list.map(row).join('') + '</div>' : '';
   const pill = (cls, label, n) => '<span class="pill"><span class="dot ' + cls + '"></span>' + label + ' ' + n + '</span>';
-  box.innerHTML = '<div class="pills">' + pill('red', 'ด่วน', by.red.length) + pill('orange', 'ควรสั่ง', by.orange.length) + pill('green', 'พอ', by.green.length) + (by.grey.length ? pill('grey', 'ยังไม่นับ', by.grey.length) : '') + '</div>' +
+  box.innerHTML = catChips + '<div class="pills">' + pill('red', 'ด่วน', by.red.length) + pill('orange', 'ควรสั่ง', by.orange.length) + pill('green', 'พอ', by.green.length) + (by.grey.length ? pill('grey', 'ยังไม่นับ', by.grey.length) : '') + '</div>' +
     (S.order ? '<div class="card"><div class="step" style="margin-bottom:0">รายการแนะนำสั่งตรัง</div><div class="hint">คิดเผื่อเสาร์-อาทิตย์ที่ขายดีกว่าแล้ว</div><div class="order" id="order">' + esc(S.order) + '</div><button class="btn ghost" id="copy">คัดลอกรายการ</button></div>' : '') +
     sec('red', 'ด่วน สั่งวันนี้', by.red) + sec('orange', 'ควรสั่งใน 1-2 วัน', by.orange) + sec('green', 'พอขาย', by.green) + sec('grey', 'ยังไม่นับ / ยังไม่มียอดขาย', by.grey) +
     (fresh ? '' : '<div class="sync" id="sync">กำลังอัปเดตตัวเลขล่าสุด…</div>');
+  document.querySelectorAll('[data-sc]').forEach((b) => b.onclick = () => { S.stockCat = b.dataset.sc; renderStockNow(true); });
   if ($('copy')) $('copy').onclick = async () => {
     try { await navigator.clipboard.writeText(S.order); toast('คัดลอกแล้ว ไปวางในแชทกับตรังได้เลย'); }
     catch (e) { const rg = document.createRange(); rg.selectNodeContents($('order')); getSelection().removeAllRanges(); getSelection().addRange(rg); toast('เลือกข้อความแล้ว กดค้างเพื่อคัดลอก'); }
